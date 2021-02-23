@@ -1,4 +1,4 @@
-# INFN MLinDocker
+# Single node jupyterhub
 
 ## Configure the host machine
 
@@ -73,8 +73,8 @@ docker run --rm --gpus all nvidia/cuda nvidia-smi
 Download this repo:
 
 ```bash
-git clone https://github.com/dodas-ts/MLinD-INFN
-cd MLinD-INFN
+git clone https://github.com/dodas-ts/single-node-jupyterhub
+cd single-node-jupyterhub
 ```
 
 Compile the docker-compose.yaml file with your preferences:
