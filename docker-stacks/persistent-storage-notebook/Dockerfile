@@ -4,7 +4,8 @@ ARG JUPYTER_ROOT=/workarea
 
 RUN apt-get update && apt-get install -y \
     python3 \
-    python3-pip
+    python3-pip \ 
+    wget
 
 RUN python3 -m pip --no-cache-dir install --upgrade pip
 
