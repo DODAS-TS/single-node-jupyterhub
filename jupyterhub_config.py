@@ -98,6 +98,55 @@ class EnvAuthenticator(GenericOAuthenticator):
                 )
                 raise Exception("OAuth user not in the allowed groups %s" % allowed_groups)
 
+
+    async def authenticate(self, handler, data=None):
+        code = handler.get_argument("code")
+        # TODO: Configure the curl_httpclient for tornado
+        http_client = self.http_client()
+
+        params = dict(
+            redirect_uri=self.get_callback_url(handler),
+            code=code,
+            grant_type='authorization_code',
+        )
+        params.update(self.extra_params)
+
+        headers = self._get_headers()
+
+        token_resp_json = await self._get_token(http_client, headers, params)
+
+        user_data_resp_json = await self._get_user_data(http_client, token_resp_json)
+
+
+
+        if callable(self.username_key):
+            name = self.username_key(user_data_resp_json)
+        else:
+            name = user_data_resp_json.get(self.username_key)
+            if not name:
+                self.log.error(
+                    "OAuth user contains no key %s: %s", self.username_key, user_data_resp_json
+                )
+                return
+
+        auth_state = self._create_auth_state(token_resp_json, user_data_resp_json)
+
+        is_admin = False
+        if os.environ.get("ADMIN_OAUTH_GROUPS") in auth_state['oauth_user']['groups']:
+            self.log.info("%s : %s is in %s" , (name, os.environ.get("ADMIN_OAUTH_GROUPS"), auth_state['oauth_user']['groups']))
+            is_admin = True
+        else:
+            self.log.info(" %s is not in admin group ", name)
+
+
+        return {
+            'name': name,
+            'admin': is_admin,
+            'auth_state': auth_state #self._create_auth_state(token_resp_json, user_data_resp_json)
+        }
+
+
+
 c.JupyterHub.authenticator_class = EnvAuthenticator
 c.GenericOAuthenticator.oauth_callback_url = callback
 

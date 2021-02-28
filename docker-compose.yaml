@@ -3,8 +3,8 @@ services:
   jupyterhub:
     build: .
     command:
-      - /opt/conda/bin/python
-      - /opt/conda/bin/jupyterhub
+      - /usr/bin/python3
+      - /usr/local/bin/jupyterhub
       - --debug
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
@@ -13,8 +13,9 @@ services:
     environment:
     - OAUTH_ENDPOINT=https://iam-demo.cloud.cnaf.infn.it
     - OAUTH_CALLBACK_URL=http://docker-dev.cern.ch:8888/hub/oauth_callback
-    - OAUTH_GROUPS=group1 group2 covid_env
+    - OAUTH_GROUPS=group1
     - WITH_GPU=false
+    - ADMIN_OAUTH_GROUPS=group2
 
 networks:
   default:
