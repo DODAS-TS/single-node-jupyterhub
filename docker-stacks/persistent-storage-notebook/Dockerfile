@@ -7,15 +7,18 @@ RUN apt-get update && apt-get install -y \
     python3-pip \ 
     wget \
     fuse \
+    git \
     software-properties-common
 
 RUN python3 -m pip --no-cache-dir install --upgrade pip
 
-RUN pip install --no-cache-dir jupyterhub notebook
+RUN pip install --no-cache-dir jupyterhub notebook \
+    && pip3 install -U git+https://github.com/DODAS-TS/boto3sts
 
 # Automount S3 with sts-wire
 COPY custom-spawner/jupyterhub-singleuser /usr/local/bin/jupyterhub-singleuser
 COPY custom-spawner/spawn.sh ./.init/spawn.sh
+COPY examples ${JUPYTER_ROOT}/examples
 
 RUN chmod +x /usr/local/bin/jupyterhub-singleuser \
     && chmod +x ./.init/spawn.sh
@@ -35,4 +38,3 @@ RUN ln -s /s3 ${JUPYTER_ROOT}/cloud-storage \
     && ln -s /private ${JUPYTER_ROOT}/private
 
 WORKDIR ${JUPYTER_ROOT}
-
