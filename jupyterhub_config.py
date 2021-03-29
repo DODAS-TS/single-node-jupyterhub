@@ -11,6 +11,7 @@ import json
 import os
 import base64
 import urllib
+import sys
 
 from tornado.auth import OAuth2Mixin
 from tornado import web
@@ -191,11 +192,14 @@ class CustomSpawner(dockerspawner.DockerSpawner):
   </datalist>
 <br>
         <label for="mem">Select your desired memory size:</label>
+        <!-- MEM START -->
         <select name="mem" size="1">
-  <option value="1G">  4GB</option>
-  <option value="2G">  4GB</option>
+  <option value="2G">  2GB</option>
   <option value="4G">  4GB</option>
+  <option value="8G">  8GB </option>
+  <option value="16G"> 16GB </option>
 </select>
+        <!-- MEM END -->
 
 <br>
         <label for="gpu">GPU:</label>
@@ -323,4 +327,14 @@ c.DockerSpawner.debug = True
 c.JupyterHub.hub_bind_url = 'http://:8088'
 c.JupyterHub.hub_connect_ip = 'jupyterhub'
 
+c.JupyterHub.admin_access = True
+
 #c.Authenticator.allowed_users = {'test'}
+
+c.JupyterHub.services = [
+    {
+        'name': 'idle-culler',
+        'admin': True,
+        'command': [sys.executable, '-m', 'jupyterhub_idle_culler', '--timeout=7200'],
+    }
+]
