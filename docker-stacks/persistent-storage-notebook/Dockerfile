@@ -11,8 +11,8 @@ RUN apt-get update && apt-get install -y \
     software-properties-common \
     ca-certificates
 
-COPY ./ca.crt /usr/local/share/ca-certificates/ca.crt
-RUN update-ca-certificates
+RUN wget "https://crt.sh/?d=2475254782" -O /usr/local/share/ca-certificates/ca.crt && \                                      
+    update-ca-certificates 
 
 RUN python3 -m pip --no-cache-dir install --upgrade pip
 
