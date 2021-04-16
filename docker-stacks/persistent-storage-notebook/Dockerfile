@@ -8,7 +8,11 @@ RUN apt-get update && apt-get install -y \
     wget \
     fuse \
     git \
-    software-properties-common
+    software-properties-common \
+    ca-certificates
+
+COPY ./ca.crt /usr/local/share/ca-certificates/ca.crt
+RUN update-ca-certificates
 
 RUN python3 -m pip --no-cache-dir install --upgrade pip
 

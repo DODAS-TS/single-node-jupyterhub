@@ -9,5 +9,9 @@ COPY jupyterhub_config.py /srv/jupyterhub/jupyterhub_config.py
 
 RUN mkdir -p .init
 
+# Install INFN-CLOUD CAs
+COPY ./ca.crt /usr/local/share/ca-certificates/ca.crt
+RUN update-ca-certificates
+
 # COPY self registration da docker
 COPY --from=REGISTRATION /usr/local/bin/dodas-IAMClientRec ./.init/dodas-IAMClientRec
