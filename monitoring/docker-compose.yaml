@@ -50,8 +50,10 @@ services:
       - 8080
 
   grafana:
-    image: grafana/grafana:latest
+    build: .
     container_name: monitoring_grafana
+    depends_on:
+      - prometheus
     restart: unless-stopped
     command:
     - "-config"
