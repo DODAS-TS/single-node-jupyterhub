@@ -10,6 +10,7 @@ COPY jupyterhub_config.py /srv/jupyterhub/jupyterhub_config.py
 RUN mkdir -p .init
 
 # Install INFN-CLOUD CAs
+RUN apt-get install -y wget
 RUN wget "https://crt.sh/?d=2475254782" -O /usr/local/share/ca-certificates/ca.crt && \                                      
     update-ca-certificates 
 
