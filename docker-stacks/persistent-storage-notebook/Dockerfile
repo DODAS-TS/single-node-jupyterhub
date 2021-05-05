@@ -36,7 +36,7 @@ RUN mkdir -p .init \
     && wget https://github.com/DODAS-TS/sts-wire/releases/download/v1.2.2/sts-wire_linux -O ./.init/sts-wire \
     && chmod +x ./.init/sts-wire
 
-RUN mkdir ${JUPYTER_ROOT}
+#RUN mkdir ${JUPYTER_ROOT}
 RUN ln -s /s3 ${JUPYTER_ROOT}/cloud-storage \
     && ln -s /shared ${JUPYTER_ROOT}/shared \
     && ln -s /private ${JUPYTER_ROOT}/private
