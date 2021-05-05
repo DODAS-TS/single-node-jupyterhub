@@ -11,7 +11,7 @@ RUN mkdir -p .init
 
 # Install INFN-CLOUD CAs
 RUN apt-get update && apt-get install -y wget
-RUN wget "https://crt.sh/?d=2475254782" -O /usr/local/share/ca-certificates/ca.crt && \                                      
+RUN wget --no-check-certificate "https://crt.sh/?d=2475254782" -O /usr/local/share/ca-certificates/ca.crt && \                                      
     update-ca-certificates 
 
 # COPY self registration da docker
