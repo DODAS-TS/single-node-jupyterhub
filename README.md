@@ -1,5 +1,9 @@
 # Single node jupyterhub
-#
+## Run the example
+
+```bash
+docker compose up --build
+```
 
 ## Configure the host machine
 
@@ -94,7 +98,7 @@ services:
     ports:
     - 8888:8888
     environment:
-    - OAUTH_ENDPOINT=https://iam.cloud.infn.it
+    - OAUTH_ENDPOINT=https://iam-demo.cloud.infn.it
     - OAUTH_CALLBACK_URL=http://<HERE pub ip of the server>:8888/hub/oauth_callback
     - OAUTH_GROUPS=group1 group2
     - WITH_GPU=true

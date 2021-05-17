@@ -35,7 +35,7 @@ iam_server = os.environ["OAUTH_ENDPOINT"]
 server_host = socket.gethostbyname(socket.getfqdn())
 os.environ["IAM_INSTANCE"] = iam_server
 
-#c.Spawner.default_url = '/lab'
+# c.Spawner.default_url = '/lab'
 
 myenv = os.environ.copy()
 
@@ -177,7 +177,7 @@ c.JupyterHub.cookie_secret_file = '/srv/jupyterhub/cookies/jupyterhub_cookie_sec
 c.ConfigurableHTTPProxy.debug = True
 c.JupyterHub.cleanup_servers = False
 c.ConfigurableHTTPProxy.should_start = False
-c.ConfigurableHTTPProxy.auth_token = "__ML_TOKEN_HERE__"
+c.ConfigurableHTTPProxy.auth_token = "test_token"
 c.ConfigurableHTTPProxy.api_url = 'http://http_proxy:8001'
 
 
@@ -188,23 +188,56 @@ class CustomSpawner(dockerspawner.DockerSpawner):
         <label for="stack">Select your desired image:</label>
   <input list="images" name="img">
   <datalist id="images">
-    <option value="dodasts/ml_infn:beta-v2">ML-INFN-DEMO</option>
-  </datalist>
+<option value="dodasts/mlinfn-base:v1">DODASTS/MLINFN-BASE:V1</option>
+<option value="dodasts/mlinfn-conda-base:v2">DODASTS/MLINFN-CONDA-BASE:V2</option>
+</datalist>
+
 <br>
         <label for="mem">Select your desired memory size:</label>
         <!-- MEM START -->
-        <select name="mem" size="1">
-  <option value="2G">  2GB</option>
-  <option value="4G">  4GB</option>
-  <option value="8G">  8GB </option>
-  <option value="16G"> 16GB </option>
+<select name="mem" size="1">
+<option value="1G">1GB</option>
+<option value="2G">2GB</option>
+<option value="4G">4GB</option>
+<option value="6G">6GB</option>
+<option value="8G">8GB</option>
+<option value="10G">10GB</option>
+<option value="12G">12GB</option>
+<option value="14G">14GB</option>
+<option value="16G">16GB</option>
+<option value="18G">18GB</option>
+<option value="20G">20GB</option>
+<option value="22G">22GB</option>
+<option value="24G">24GB</option>
+<option value="26G">26GB</option>
+<option value="28G">28GB</option>
+<option value="30G">30GB</option>
+<option value="32G">32GB</option>
+<option value="34G">34GB</option>
+<option value="36G">36GB</option>
+<option value="38G">38GB</option>
+<option value="40G">40GB</option>
+<option value="42G">42GB</option>
+<option value="44G">44GB</option>
+<option value="46G">46GB</option>
+<option value="48G">48GB</option>
+<option value="50G">50GB</option>
+<option value="52G">52GB</option>
+<option value="54G">54GB</option>
+<option value="56G">56GB</option>
+<option value="58G">58GB</option>
+<option value="60G">60GB</option>
+<option value="62G">62GB</option>
+<option value="64G">64GB</option>
 </select>
-        <!-- MEM END -->
+<!-- MEM END -->
+
 
 <br>
         <label for="gpu">GPU:</label>
         <select name="gpu" size="1">
-  <option value="N"> Not Available </option>
+<option value="Y">Yes</option>
+<option value="N"> No </option>
 </select>
 """
 
@@ -305,7 +338,7 @@ c.DockerSpawner.http_timeout = 600
 #notebook_dir = os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
 #c.DockerSpawner.notebook_dir = notebook_dir
 
-#cvmfs_mount_dir = "/cvmfs/"#os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
+cvmfs_mount_dir = "/cvmfs/"#os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
 
 notebook_mount_dir = "/jupyter-users"#/{username}/"#os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
 #notebook_dir = "$PWD/persistent-area/{username}/"#os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
@@ -314,8 +347,13 @@ notebook_dir = os.environ.get('DOCKER_NOTEBOOK_DIR') or '/'
 # Mount the real user's Docker volume on the host to the notebook user's
 # notebook directory in the container
 #c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
-c.DockerSpawner.volumes = {  notebook_mount_dir+"/scratch": {"bind": notebook_dir+"/shared", "mode" : "rw" }, notebook_mount_dir+'/{username}/': {"bind": notebook_dir+"/private", "mode" : "rw" }}
-#, cvmfs_mount_dir : notebook_dir+"/cvmfs"}
+c.DockerSpawner.volumes = {  
+        notebook_mount_dir+"/shared": {
+            "bind": notebook_dir+"/shared", "mode" : "rw" }, 
+        notebook_mount_dir+'/{username}/': {"bind": notebook_dir+"/private", "mode" : "rw" },
+        # Mount point for collaboration jupyter lab
+        "/usr/local/share/collabspace": {"bind": "/workarea/collabspace", "mode": "rw"},
+        cvmfs_mount_dir : notebook_dir+"/cvmfs" }
 
 # volume_driver is no longer a keyword argument to create_container()
 # c.DockerSpawner.extra_create_kwargs.update({ 'volume_driver': 'local' })
@@ -336,5 +374,10 @@ c.JupyterHub.services = [
         'name': 'idle-culler',
         'admin': True,
         'command': [sys.executable, '-m', 'jupyterhub_idle_culler', '--timeout=7200'],
-    }
+    },
+    {
+        'url': "http://collab_proxy:8099",
+        'name': 'collab',
+        'api_token': 'API_TOKEN_EXAMPLE',
+    },
 ]

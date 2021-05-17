@@ -1,0 +1,13 @@
+diff --git a/jupyterlab/labapp.py b/jupyterlab/labapp.py
+index 2f6f42273..534c4c7c0 100644
+--- a/jupyterlab/labapp.py
++++ b/jupyterlab/labapp.py
+@@ -558,7 +558,7 @@ class LabApp(NBClassicConfigShimMixin, LabServerApp):
+     expose_app_in_browser = Bool(False, config=True,
+         help="Whether to expose the global app instance to browser via window.jupyterlab")
+     
+-    collaborative = Bool(False, config=True,
++    collaborative = Bool(True, config=True,
+         help="Whether to enable collaborative mode.")
+ 
+     @default('app_dir')
