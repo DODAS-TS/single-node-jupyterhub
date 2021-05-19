@@ -44,6 +44,7 @@ COPY jupyterhub_config.py /etc/jupyterhub/
 
 WORKDIR /usr/share/workspace
 
-CMD ["jupyter", "lab", "--ip=0.0.0.0", "--allow-root", "--ServerApp.allow_password_change=False", \
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--allow-root", "--debug", \
+     "--ServerApp.allow_password_change=False", \
      "--ServerApp.keyfile=/tmp/certs/jupyter/hostcert.key", \
      "--ServerApp.certfile=/tmp/certs/jupyter/hostcert.pem"]
