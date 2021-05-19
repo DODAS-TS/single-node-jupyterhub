@@ -69,7 +69,7 @@ services:
       - 8099:8099
   
   jupyterlab_collab:
-    image: mircot/jupyterlab_collaborative:v3-ubuntu
+    build: jupyterlab_collab
     volumes:
         # You can create a certificate example with dodas-x509
         - /tmp/certs/jupyter:/tmp/certs/jupyter
