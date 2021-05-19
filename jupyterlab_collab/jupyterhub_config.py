@@ -64,7 +64,7 @@
 #
 #  Users should be properly informed if this is enabled.
 #  Default: False
-c.JupyterHub.admin_access = True
+# c.JupyterHub.admin_access = False
 
 ## DEPRECATED since version 0.7.2, use Authenticator.admin_users instead.
 #  Default: set()
