@@ -26,7 +26,10 @@ from traitlets import Unicode, Dict, Bool, Union, default, observe
 
 c = get_config()
 
-c.JupyterHub.tornado_settings = {'max_body_size': 1048576000, 'max_buffer_size': 1048576000}
+c.JupyterHub.tornado_settings = {
+    "max_body_size": 1048576000,
+    "max_buffer_size": 1048576000,
+}
 
 callback = os.environ["OAUTH_CALLBACK_URL"]
 os.environ["OAUTH_CALLBACK"] = callback
@@ -39,21 +42,20 @@ os.environ["IAM_INSTANCE"] = iam_server
 
 myenv = os.environ.copy()
 
-cache_file = '/srv/jupyterhub/cookies/iam_secret'
+cache_file = "/srv/jupyterhub/cookies/iam_secret"
 
 if os.path.isfile(cache_file):
     with open(cache_file) as f:
         cache_results = json.load(f)
 else:
-    response = subprocess.check_output(['./.init/dodas-IAMClientRec', server_host], env=myenv)
-    response_list = response.decode('utf-8').split("\n")
-    client_id = response_list[len(response_list)-3]
-    client_secret = response_list[len(response_list)-2]
+    response = subprocess.check_output(
+        ["./.init/dodas-IAMClientRec", server_host], env=myenv
+    )
+    response_list = response.decode("utf-8").split("\n")
+    client_id = response_list[len(response_list) - 3]
+    client_secret = response_list[len(response_list) - 2]
 
-    cache_results = {
-        "client_id": client_id,
-        "client_secret": client_secret
-    }
+    cache_results = {"client_id": client_id, "client_secret": client_secret}
     with open(cache_file, "w") as w:
         json.dump(cache_results, w)
 
@@ -62,43 +64,43 @@ client_secret = cache_results["client_secret"]
 
 
 class EnvAuthenticator(GenericOAuthenticator):
-
     @gen.coroutine
     def pre_spawn_start(self, user, spawner):
         auth_state = yield user.get_auth_state()
         import pprint
+
         pprint.pprint(auth_state)
         if not auth_state:
             # user has no auth state
             return
         # define some environment variables from auth_state
         self.log.info(auth_state)
-        spawner.environment['IAM_SERVER'] = iam_server
-        spawner.environment['IAM_CLIENT_ID'] = client_id
-        spawner.environment['IAM_CLIENT_SECRET'] = client_secret
-        spawner.environment['ACCESS_TOKEN'] = auth_state['access_token']
-        spawner.environment['REFRESH_TOKEN'] = auth_state['refresh_token']
-        spawner.environment['USERNAME'] = auth_state['oauth_user']['preferred_username']
-        spawner.environment['JUPYTERHUB_ACTIVITY_INTERVAL'] = "15"
+        spawner.environment["IAM_SERVER"] = iam_server
+        spawner.environment["IAM_CLIENT_ID"] = client_id
+        spawner.environment["IAM_CLIENT_SECRET"] = client_secret
+        spawner.environment["ACCESS_TOKEN"] = auth_state["access_token"]
+        spawner.environment["REFRESH_TOKEN"] = auth_state["refresh_token"]
+        spawner.environment["USERNAME"] = auth_state["oauth_user"]["preferred_username"]
+        spawner.environment["JUPYTERHUB_ACTIVITY_INTERVAL"] = "15"
 
         amIAllowed = False
 
         if os.environ.get("OAUTH_GROUPS"):
-            spawner.environment['GROUPS'] = " ".join(auth_state['oauth_user']['groups'])
+            spawner.environment["GROUPS"] = " ".join(auth_state["oauth_user"]["groups"])
             allowed_groups = os.environ["OAUTH_GROUPS"].split(" ")
-            self.log.info(auth_state['oauth_user']['groups'])
+            self.log.info(auth_state["oauth_user"]["groups"])
             for gr in allowed_groups:
-                if gr in auth_state['oauth_user']['groups']:
+                if gr in auth_state["oauth_user"]["groups"]:
                     amIAllowed = True
         else:
             amIAllowed = True
 
         if not amIAllowed:
-                self.log.error(
-                    "OAuth user contains not in group the allowed groups %s" % allowed_groups
-                )
-                raise Exception("OAuth user not in the allowed groups %s" % allowed_groups)
-
+            self.log.error(
+                "OAuth user contains not in group the allowed groups %s"
+                % allowed_groups
+            )
+            raise Exception("OAuth user not in the allowed groups %s" % allowed_groups)
 
     async def authenticate(self, handler, data=None):
         code = handler.get_argument("code")
@@ -108,7 +110,7 @@ class EnvAuthenticator(GenericOAuthenticator):
         params = dict(
             redirect_uri=self.get_callback_url(handler),
             code=code,
-            grant_type='authorization_code',
+            grant_type="authorization_code",
         )
         params.update(self.extra_params)
 
@@ -118,67 +120,78 @@ class EnvAuthenticator(GenericOAuthenticator):
 
         user_data_resp_json = await self._get_user_data(http_client, token_resp_json)
 
-
-
         if callable(self.username_key):
             name = self.username_key(user_data_resp_json)
         else:
             name = user_data_resp_json.get(self.username_key)
             if not name:
                 self.log.error(
-                    "OAuth user contains no key %s: %s", self.username_key, user_data_resp_json
+                    "OAuth user contains no key %s: %s",
+                    self.username_key,
+                    user_data_resp_json,
                 )
                 return
 
         auth_state = self._create_auth_state(token_resp_json, user_data_resp_json)
 
         is_admin = False
-        if os.environ.get("ADMIN_OAUTH_GROUPS") in auth_state['oauth_user']['groups']:
-            self.log.info("%s : %s is in %s" , (name, os.environ.get("ADMIN_OAUTH_GROUPS"), auth_state['oauth_user']['groups']))
+        if os.environ.get("ADMIN_OAUTH_GROUPS") in auth_state["oauth_user"]["groups"]:
+            self.log.info(
+                "%s : %s is in %s",
+                (
+                    name,
+                    os.environ.get("ADMIN_OAUTH_GROUPS"),
+                    auth_state["oauth_user"]["groups"],
+                ),
+            )
             is_admin = True
         else:
             self.log.info(" %s is not in admin group ", name)
 
-
         return {
-            'name': name,
-            'admin': is_admin,
-            'auth_state': auth_state #self._create_auth_state(token_resp_json, user_data_resp_json)
+            "name": name,
+            "admin": is_admin,
+            "auth_state": auth_state,  # self._create_auth_state(token_resp_json, user_data_resp_json)
         }
-
 
 
 c.JupyterHub.authenticator_class = EnvAuthenticator
 c.GenericOAuthenticator.oauth_callback_url = callback
 
-c.JupyterHub.db_url = 'sqlite:///db/jupyterhub.sqlite'
+c.JupyterHub.db_url = "sqlite:///db/jupyterhub.sqlite"
 
 # PUT IN SECRET
 c.GenericOAuthenticator.client_id = client_id
 c.GenericOAuthenticator.client_secret = client_secret
-c.GenericOAuthenticator.authorize_url = iam_server.strip('/') + '/authorize'
-c.GenericOAuthenticator.token_url = iam_server.strip('/') + '/token'
-c.GenericOAuthenticator.userdata_url = iam_server.strip('/') + '/userinfo'
-c.GenericOAuthenticator.scope = ['openid', 'profile', 'email', 'address', 'offline_access']
+c.GenericOAuthenticator.authorize_url = iam_server.strip("/") + "/authorize"
+c.GenericOAuthenticator.token_url = iam_server.strip("/") + "/token"
+c.GenericOAuthenticator.userdata_url = iam_server.strip("/") + "/userinfo"
+c.GenericOAuthenticator.scope = [
+    "openid",
+    "profile",
+    "email",
+    "address",
+    "offline_access",
+]
 c.GenericOAuthenticator.username_key = "preferred_username"
 
 c.GenericOAuthenticator.enable_auth_state = True
-if 'JUPYTERHUB_CRYPT_KEY' not in os.environ:
+if "JUPYTERHUB_CRYPT_KEY" not in os.environ:
     warnings.warn(
         "Need JUPYTERHUB_CRYPT_KEY env for persistent auth_state.\n"
         "    export JUPYTERHUB_CRYPT_KEY=$(openssl rand -hex 32)"
     )
-    c.CryptKeeper.keys = [ os.urandom(32) ]
+    c.CryptKeeper.keys = [os.urandom(32)]
 
 c.JupyterHub.log_level = 30
 
-c.JupyterHub.cookie_secret_file = '/srv/jupyterhub/cookies/jupyterhub_cookie_secret'
+c.JupyterHub.cookie_secret_file = "/srv/jupyterhub/cookies/jupyterhub_cookie_secret"
 
 c.ConfigurableHTTPProxy.debug = True
 c.JupyterHub.cleanup_servers = False
 c.ConfigurableHTTPProxy.should_start = False
 c.ConfigurableHTTPProxy.auth_token = "test_token"
-c.ConfigurableHTTPProxy.api_url = 'http://http_proxy:8001'
+c.ConfigurableHTTPProxy.api_url = "http://http_proxy:8001"
 
 
 # Spawn single-user servers as Docker containers
@@ -243,38 +256,32 @@ class CustomSpawner(dockerspawner.DockerSpawner):
 
     def options_from_form(self, formdata):
         options = {}
-        options['img'] = formdata['img']
-        container_image = ''.join(formdata['img'])
-        print("SPAWN: " + container_image + " IMAGE" )
+        options["img"] = formdata["img"]
+        container_image = "".join(formdata["img"])
+        print("SPAWN: " + container_image + " IMAGE")
         self.container_image = container_image
-        options['mem'] = formdata['mem']
-        memory = ''.join(formdata['mem'])
+        options["mem"] = formdata["mem"]
+        memory = "".join(formdata["mem"])
         self.mem_limit = memory
-        options['gpu'] = formdata['gpu']
-        use_gpu = True if ''.join(formdata['gpu'])=="Y" else False
+        options["gpu"] = formdata["gpu"]
+        use_gpu = True if "".join(formdata["gpu"]) == "Y" else False
         device_request = {}
         if use_gpu:
             device_request = {
-                'Driver': 'nvidia',
-                'Capabilities': [['gpu']],  # not sure which capabilities are really needed
-                'Count': 1,  # enable all gpus
+                "Driver": "nvidia",
+                "Capabilities": [
+                    ["gpu"]
+                ],  # not sure which capabilities are really needed
+                "Count": 1,  # enable all gpus
             }
             self.extra_host_config = {
-                "cap_add": [
-                      "SYS_ADMIN"
-                ],
+                "cap_add": ["SYS_ADMIN"],
                 "privileged": True,
-                'device_requests': [device_request]
+                "device_requests": [device_request],
             }
         else:
-            self.extra_host_config = {
-                "cap_add": [
-                      "SYS_ADMIN"
-                ],
-                "privileged": True
-            }
+            self.extra_host_config = {"cap_add": ["SYS_ADMIN"], "privileged": True}
         return options
-
 
     @gen.coroutine
     def create_object(self):
@@ -317,17 +324,21 @@ class CustomSpawner(dockerspawner.DockerSpawner):
         obj = yield self.docker("create_container", **create_kwargs)
         return obj
 
+
 c.JupyterHub.spawner_class = CustomSpawner
 
 # Default spawn to jupyterLab
-spawn_cmd = os.environ.get('DOCKER_SPAWN_CMD', "jupyterhub-singleuser --port 8889 --ip 0.0.0.0 --allow-root --debug")
+spawn_cmd = os.environ.get(
+    "DOCKER_SPAWN_CMD",
+    "jupyterhub-singleuser --port 8889 --ip 0.0.0.0 --allow-root --debug",
+)
 # uncomment to start a jupyter NB instead of jupyterlab
-#spawn_cmd = os.environ.get('DOCKER_SPAWN_CMD', "jupyterhub-singleuser --port 8889 --ip 0.0.0.0 --allow-root --debug")
+# spawn_cmd = os.environ.get('DOCKER_SPAWN_CMD', "jupyterhub-singleuser --port 8889 --ip 0.0.0.0 --allow-root --debug")
 
 c.DockerSpawner.port = 8889
-c.DockerSpawner.extra_create_kwargs.update({ 'command': spawn_cmd })
+c.DockerSpawner.extra_create_kwargs.update({"command": spawn_cmd})
 
-c.DockerSpawner.network_name = 'jupyterhub'
+c.DockerSpawner.network_name = "jupyterhub"
 
 c.DockerSpawner.http_timeout = 600
 
@@ -335,25 +346,28 @@ c.DockerSpawner.http_timeout = 600
 # it.  Most jupyter/docker-stacks *-notebook images run the Notebook server as
 # user `jovyan`, and set the notebook directory to `/home/jovyan/work`.
 # We follow the same convention.
-#notebook_dir = os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
-#c.DockerSpawner.notebook_dir = notebook_dir
+# notebook_dir = os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
+# c.DockerSpawner.notebook_dir = notebook_dir
 
-cvmfs_mount_dir = "/cvmfs/"#os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
+cvmfs_mount_dir = (
+    "/cvmfs/"  # os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
+)
 
-notebook_mount_dir = "/jupyter-users"#/{username}/"#os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
-#notebook_dir = "$PWD/persistent-area/{username}/"#os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
-notebook_dir = os.environ.get('DOCKER_NOTEBOOK_DIR') or '/'
-#c.DockerSpawner.notebook_dir = notebook_dir
+notebook_mount_dir = "/jupyter-users"  # /{username}/"#os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
+# notebook_dir = "$PWD/persistent-area/{username}/"#os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
+notebook_dir = os.environ.get("DOCKER_NOTEBOOK_DIR") or "/"
+# c.DockerSpawner.notebook_dir = notebook_dir
 # Mount the real user's Docker volume on the host to the notebook user's
 # notebook directory in the container
-#c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
-c.DockerSpawner.volumes = {  
-        notebook_mount_dir+"/shared": {
-            "bind": notebook_dir+"/shared", "mode" : "rw" }, 
-        notebook_mount_dir+'/{username}/': {"bind": notebook_dir+"/private", "mode" : "rw" },
-        # Mount point for collaboration jupyter lab
-        "/usr/local/share/collabspace": {"bind": "/workarea/collabspace", "mode": "rw"},
-        cvmfs_mount_dir : notebook_dir+"/cvmfs" }
+# c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
+c.DockerSpawner.volumes = {
+    notebook_mount_dir + "/shared": {"bind": notebook_dir + "/shared", "mode": "rw"},
+    notebook_mount_dir
+    + "/{username}/": {"bind": notebook_dir + "/private", "mode": "rw"},
+    # Mount point for collaboration jupyter lab
+    "/usr/local/share/collabspace": {"bind": "/workarea/collabspace", "mode": "rw"},
+    cvmfs_mount_dir: notebook_dir + "/cvmfs",
+}
 
 # volume_driver is no longer a keyword argument to create_container()
 # c.DockerSpawner.extra_create_kwargs.update({ 'volume_driver': 'local' })
@@ -362,22 +376,22 @@ c.DockerSpawner.remove_containers = True
 # For debugging arguments passed to spawned containers
 c.DockerSpawner.debug = True
 
-c.JupyterHub.hub_bind_url = 'http://:8088'
-c.JupyterHub.hub_connect_ip = 'jupyterhub'
+c.JupyterHub.hub_bind_url = "http://:8088"
+c.JupyterHub.hub_connect_ip = "jupyterhub"
 
 c.JupyterHub.admin_access = True
 
-#c.Authenticator.allowed_users = {'test'}
+# c.Authenticator.allowed_users = {'test'}
 
 c.JupyterHub.services = [
     {
-        'name': 'idle-culler',
-        'admin': True,
-        'command': [sys.executable, '-m', 'jupyterhub_idle_culler', '--timeout=7200'],
+        "name": "idle-culler",
+        "admin": True,
+        "command": [sys.executable, "-m", "jupyterhub_idle_culler", "--timeout=7200"],
     },
     {
-        'url': "http://collab_proxy:8099",
-        'name': 'Collaborative Jupyter',
-        'api_token': 'API_TOKEN_EXAMPLE',
+        "url": "http://collab_proxy:8099",
+        "name": "Collaborative Jupyter",
+        "api_token": "API_TOKEN_EXAMPLE",
     },
 ]
