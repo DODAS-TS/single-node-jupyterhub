@@ -44,10 +44,10 @@ services:
       - --default-target=http://jupyterhub:8088
       - --error-target=http://jupyterhub:8088/hub/error
       # You can create a certificate example with dodas-x509
-      - --ssl-key=/usr/local/share/jupyter/hostcert.key
-      - --ssl-cert=/usr/local/share/jupyter/hostcert.pem
+      - --ssl-key=/usr/local/share/certs/jupyter/hostcert.key
+      - --ssl-cert=/usr/local/share/certs/jupyter/hostcert.pem
     volumes:
-      - /usr/local/share/jupyter:/usr/local/share/jupyter
+      - /usr/local/share/certs/jupyter:/usr/local/share/certs/jupyter
     environment:
       - CONFIGPROXY_AUTH_TOKEN=test_token
     ports:
@@ -73,7 +73,7 @@ services:
     build: jupyterlab_collab
     volumes:
       # You can create a certificate example with dodas-x509
-      - /usr/local/share/jupyter:/usr/local/share/jupyter
+      - /usr/local/share/certs/jupyter:/usr/local/share/certs/jupyter
       - /usr/local/share/collabspace/:/usr/share/workspace
     environment:
       # You can create a token with `openssl rand -hex 32`
