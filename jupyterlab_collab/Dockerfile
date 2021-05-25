@@ -47,7 +47,7 @@ WORKDIR /usr/share/workspace
 
 CMD ["jupyter", "lab", "--ip=0.0.0.0", "--allow-root", "--debug", \
     "--ServerApp.allow_password_change=False", \
-    "--ServerApp.keyfile=/tmp/certs/jupyter/hostcert.key", \
-    "--ServerApp.certfile=/tmp/certs/jupyter/hostcert.pem", \
+    "--ServerApp.keyfile=/usr/local/share/jupyter/hostcert.key", \
+    "--ServerApp.certfile=/usr/local/share/jupyter/hostcert.pem", \
     "--MappingKernelManager.cull_idle_timeout=10800", \
     "--MappingKernelManager.cull_connected=True"]

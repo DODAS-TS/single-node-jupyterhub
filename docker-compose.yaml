@@ -13,7 +13,6 @@ services:
     environment:
       - REPO_LIST=
 
-  
   jupyterhub:
     depends_on:
       - http_proxy
@@ -29,7 +28,7 @@ services:
       - /usr/local/share/dodasts/jupyterhub/db:/srv/jupyterhub/db
     environment:
       - OAUTH_ENDPOINT=https://iam-demo.cloud.cnaf.infn.it
-      - OAUTH_CALLBACK_URL=http://{{HOST_IP}}:8888/hub/oauth_callback
+      - OAUTH_CALLBACK_URL=https://{{HOST_IP}}:8888/hub/oauth_callback
       - OAUTH_GROUPS=group1
       - WITH_GPU=false
       - ADMIN_OAUTH_GROUPS=group2
@@ -45,10 +44,10 @@ services:
       - --default-target=http://jupyterhub:8088
       - --error-target=http://jupyterhub:8088/hub/error
       # You can create a certificate example with dodas-x509
-      - --ssl-key=/tmp/certs/jupyter/hostcert.key
-      - --ssl-cert=/tmp/certs/jupyter/hostcert.pem
+      - --ssl-key=/usr/local/share/jupyter/hostcert.key
+      - --ssl-cert=/usr/local/share/jupyter/hostcert.pem
     volumes:
-      - /tmp/certs/jupyter:/tmp/certs/jupyter
+      - /usr/local/share/jupyter:/usr/local/share/jupyter
     environment:
       - CONFIGPROXY_AUTH_TOKEN=test_token
     ports:
@@ -56,27 +55,29 @@ services:
       - 8001:8001
 
   collab_proxy:
+    depends_on:
+      - jupyterlab_collab
     build: collab_proxy
     environment:
       - JUPYTERHUB_BASE_URL=http://jupyterhub:8088
       - JUPYTERHUB_API_URL=http://jupyterhub:8088/hub/api
-      - JUPYTERHUB_SERVICE_PREFIX=/services/collab/
+      - JUPYTERHUB_SERVICE_PREFIX=/services/Collaborative-Jupyter/
       # You can create a token with `openssl rand -hex 32`
       - JUPYTERHUB_API_TOKEN=API_TOKEN_EXAMPLE
       # You can create a token with `openssl rand -hex 32`
       - JUPYTER_TOKEN=TOKEN_EXAMPLE
     ports:
       - 8099:8099
-  
+
   jupyterlab_collab:
     build: jupyterlab_collab
     volumes:
-        # You can create a certificate example with dodas-x509
-        - /tmp/certs/jupyter:/tmp/certs/jupyter
-        - /usr/local/share/collabspace/:/usr/share/workspace
+      # You can create a certificate example with dodas-x509
+      - /usr/local/share/jupyter:/usr/local/share/jupyter
+      - /usr/local/share/collabspace/:/usr/share/workspace
     environment:
       # You can create a token with `openssl rand -hex 32`
-        - JUPYTER_TOKEN=TOKEN_EXAMPLE
+      - JUPYTER_TOKEN=TOKEN_EXAMPLE
     ports:
       - 8889:8888
 
