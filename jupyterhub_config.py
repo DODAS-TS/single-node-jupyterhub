@@ -391,7 +391,7 @@ c.JupyterHub.services = [
     },
     {
         "url": "http://collab_proxy:8099",
-        "name": "Collaborative Jupyter",
+        "name": "Collaborative-Jupyter",
         "api_token": "API_TOKEN_EXAMPLE",
     },
 ]
