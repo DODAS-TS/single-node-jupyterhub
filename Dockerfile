@@ -1,6 +1,6 @@
 FROM dciangot/dodas-iam-client-rec:test5 as REGISTRATION
 
-FROM jupyterhub/jupyterhub:1.3
+FROM jupyterhub/jupyterhub:1.4
 COPY requirements.txt /tmp/requirements.txt
 RUN python3 -m pip install --no-cache -r /tmp/requirements.txt
 RUN useradd test -p "$(openssl passwd -1 test)"
