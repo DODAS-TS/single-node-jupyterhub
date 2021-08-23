@@ -1,15 +1,49 @@
-FROM ubuntu:18.04
-
-ARG JUPYTER_ROOT=/workarea
+FROM ubuntu:18.04 AS PRE
 
 RUN apt-get update && apt-get install -y \
+    software-properties-common \
+    help2man \
+    check \
+    devscripts \
+    make \
+    sudo \
+    ca-certificates \
+    libcurl4-openssl-dev \
+    libsodium-dev \
+    libseccomp-dev \
+    libmicrohttpd-dev \
+    libsecret-1-dev \
     python3 \
     python3-pip \ 
     wget \
     fuse \
-    git \
-    software-properties-common \
-    ca-certificates
+    git 
+
+FROM PRE AS COMPILE
+
+ARG JUPYTER_ROOT=/workarea
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    debhelper \
+    pkg-config \
+    perl \
+    sed \
+    fakeroot
+
+RUN cd /opt/ && git clone https://github.com/indigo-dc/oidc-agent \
+    && cd oidc-agent \
+    && make
+
+FROM PRE as BASE
+
+COPY --from=COMPILE /opt/oidc-agent /opt/oidc-agent
+
+RUN cd /opt/oidc-agent && make install_lib \
+    && make install
+
+ARG JUPYTER_ROOT=/workarea
+
 
 RUN wget "https://crt.sh/?d=2475254782" -O /usr/local/share/ca-certificates/ca.crt && \                                      
     update-ca-certificates 
@@ -27,13 +61,8 @@ COPY examples ${JUPYTER_ROOT}/examples
 RUN chmod +x /usr/local/bin/jupyterhub-singleuser \
     && chmod +x ./.init/spawn.sh
 
-RUN apt-key adv --keyserver hkp://pgp.surfnet.nl --recv-keys ACDFB08FDC962044D87FF00B512839863D487A87 \
-    && add-apt-repository "deb http://repo.data.kit.edu/ubuntu/bionic ./" \
-    && apt-get update \
-    && apt-get install -y oidc-agent
-
 RUN mkdir -p .init \
-    && wget https://github.com/DODAS-TS/sts-wire/releases/download/v1.2.2/sts-wire_linux -O ./.init/sts-wire \
+    && wget https://github.com/DODAS-TS/sts-wire/releases/download/v2.0.0/sts-wire_linux -O ./.init/sts-wire \
     && chmod +x ./.init/sts-wire
 
 #RUN mkdir ${JUPYTER_ROOT}
