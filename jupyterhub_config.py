@@ -354,12 +354,12 @@ notebook_dir = os.environ.get("DOCKER_NOTEBOOK_DIR") or "/"
 # notebook directory in the container
 # c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
 c.DockerSpawner.volumes = {
-    notebook_mount_dir + "/Backup": {"bind": notebook_dir + "/Backup", "mode": "ro"},
-    notebook_mount_dir + "/shared": {"bind": notebook_dir + "/shared", "mode": "rw"},
+    # notebook_mount_dir + "/Backup": {"bind": notebook_dir + "/Backup", "mode": "ro"},
+    # notebook_mount_dir + "/shared": {"bind": notebook_dir + "/shared", "mode": "rw"},
     # notebook_mount_dir
     # + "/shared/backup": {"bind": notebook_dir + "/shared/backup", "mode": "ro"},
-    notebook_mount_dir
-    + "/{username}/": {"bind": notebook_dir + "/private", "mode": "rw"},
+    # notebook_mount_dir
+    # + "/{username}/": {"bind": notebook_dir + "/private", "mode": "rw"},
     # Mount point for collaboration jupyter lab
     "/usr/local/share/collabspace": {"bind": "/workarea/collabspace", "mode": "rw"},
     cvmfs_mount_dir: notebook_dir + "/cvmfs",
