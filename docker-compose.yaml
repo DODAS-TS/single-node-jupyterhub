@@ -27,7 +27,7 @@ services:
       - /usr/local/share/dodasts/jupyterhub/cookies:/srv/jupyterhub/cookies
       - /usr/local/share/dodasts/jupyterhub/db:/srv/jupyterhub/db
     environment:
-      - JUPYTER_IMAGE_LIST=dodasts/mlinfn-base:v6
+      - JUPYTER_IMAGE_LIST=dodasts/snj-base-notebook:latest
       - JUPYTER_RAM_LIST=1g,2g,4g
       - JUPYTER_PROXY_TOKEN=TOKEN_EXAMPLE
       - JUPYTERHUB_API_TOKEN=TOKEN_EXAMPLE
@@ -61,7 +61,7 @@ services:
   collab_proxy:
     depends_on:
       - jupyterlab_collab
-    image: dodasts/base-jlabcollaborative-proxy:latest
+    image: dodasts/snj-base-jlabc-proxy:latest
     environment:
       - JUPYTERHUB_BASE_URL=http://jupyterhub:8088
       - JUPYTERHUB_API_URL=http://jupyterhub:8088/hub/api
@@ -74,7 +74,7 @@ services:
       - 8099:8099
 
   jupyterlab_collab:
-    image: dodasts/base-jlabcollaborative:latest
+    image: dodasts/snj-base-jlabc:latest
     volumes:
       # You can create a certificate example with dodas-x509
       - /usr/local/share/dodasts/certs/jupyter:/usr/local/share/dodasts/certs/jupyter
