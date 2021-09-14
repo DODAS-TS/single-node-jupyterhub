@@ -49,7 +49,7 @@ if os.path.isfile(cache_file):
         cache_results = json.load(f)
 else:
     response = subprocess.check_output(
-        ["./.init/dodas-IAMClientRec", server_host], env=myenv
+        ["/.init/dodas-IAMClientRec", server_host], env=myenv
     )
     response_list = response.decode("utf-8").split("\n")
     client_id = response_list[len(response_list) - 3]
@@ -190,69 +190,61 @@ c.JupyterHub.cookie_secret_file = "/srv/jupyterhub/cookies/jupyterhub_cookie_sec
 c.ConfigurableHTTPProxy.debug = True
 c.JupyterHub.cleanup_servers = False
 c.ConfigurableHTTPProxy.should_start = False
-c.ConfigurableHTTPProxy.auth_token = "test_token"
+c.ConfigurableHTTPProxy.auth_token = os.environ.get("JUPYTER_PROXY_TOKEN", "test_token")
 c.ConfigurableHTTPProxy.api_url = "http://http_proxy:8001"
 
 
-# Spawn single-user servers as Docker containers
-class CustomSpawner(dockerspawner.DockerSpawner):
-    def _options_form_default(self):
-        return """
-        <label for="stack">Select your desired image:</label>
-  <input list="images" name="img">
-  <datalist id="images">
-<option value="dodasts/mlinfn-base:v1">DODASTS/MLINFN-BASE:V1</option>
-<option value="dodasts/mlinfn-conda-base:v2">DODASTS/MLINFN-CONDA-BASE:V2</option>
+_option_template = """
+<label for="stack">Select your desired image:</label>
+<input list="images" name="img">
+<datalist id="images">
+{images}
 </datalist>
 
 <br>
-        <label for="mem">Select your desired memory size:</label>
-        <!-- MEM START -->
+    
+<label for="mem">Select your desired memory size:</label>
 <select name="mem" size="1">
-<option value="1G">1GB</option>
-<option value="2G">2GB</option>
-<option value="4G">4GB</option>
-<option value="6G">6GB</option>
-<option value="8G">8GB</option>
-<option value="10G">10GB</option>
-<option value="12G">12GB</option>
-<option value="14G">14GB</option>
-<option value="16G">16GB</option>
-<option value="18G">18GB</option>
-<option value="20G">20GB</option>
-<option value="22G">22GB</option>
-<option value="24G">24GB</option>
-<option value="26G">26GB</option>
-<option value="28G">28GB</option>
-<option value="30G">30GB</option>
-<option value="32G">32GB</option>
-<option value="34G">34GB</option>
-<option value="36G">36GB</option>
-<option value="38G">38GB</option>
-<option value="40G">40GB</option>
-<option value="42G">42GB</option>
-<option value="44G">44GB</option>
-<option value="46G">46GB</option>
-<option value="48G">48GB</option>
-<option value="50G">50GB</option>
-<option value="52G">52GB</option>
-<option value="54G">54GB</option>
-<option value="56G">56GB</option>
-<option value="58G">58GB</option>
-<option value="60G">60GB</option>
-<option value="62G">62GB</option>
-<option value="64G">64GB</option>
+    {rams}
 </select>
-<!-- MEM END -->
-
 
 <br>
-        <label for="gpu">GPU:</label>
-        <select name="gpu" size="1">
-<option value="Y">Yes</option>
-<option value="N"> No </option>
+
+<label for="gpu">GPU:</label>
+<select name="gpu" size="1">
+    {gpu}
 </select>
 """
+# Spawn single-user servers as Docker containers
+class CustomSpawner(dockerspawner.DockerSpawner):
+    def _options_form_default(self):
+        # Get images
+        images = os.environ.get("JUPYTER_IMAGE_LIST", "no default image")
+        images = [image for image in images.split(",") if image]
+        image_options = [
+            f'<option value="{image}">{image.upper()}</option>' for image in images
+        ]
+
+        # Get ram sizes
+        rams = os.environ.get("JUPYTER_RAM_LIST", "1G,2G,4G,8G")
+        rams = [ram for ram in rams.split(",") if ram]
+        ram_options = [f'<option value="{ram}">{ram}B</option>' for ram in rams]
+
+        # Get GPU
+        use_gpu = os.environ.get("WITH_GPU", "false").lower() == "true"
+        gpu_option = '<option value="N">Not Available</option>'
+        if use_gpu:
+            gpu_option = '<option value="Y">Yes</option>\n'
+            gpu_option += '<option value="N"> No </option>'
+
+        # Prepare template
+        options = _option_template.format(
+            images="\n".join(image_options),
+            rams="\n".join(ram_options),
+            gpu=gpu_option,
+        )
+
+        return options
 
     def options_from_form(self, formdata):
         options = {}
@@ -337,6 +329,7 @@ spawn_cmd = os.environ.get(
 
 c.DockerSpawner.port = 8889
 c.DockerSpawner.extra_create_kwargs.update({"command": spawn_cmd})
+# c.DockerSpawner.post_start_cmd = "something that could be useful..."
 
 c.DockerSpawner.network_name = "jupyterhub"
 
@@ -361,7 +354,10 @@ notebook_dir = os.environ.get("DOCKER_NOTEBOOK_DIR") or "/"
 # notebook directory in the container
 # c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
 c.DockerSpawner.volumes = {
+    notebook_mount_dir + "/Backup": {"bind": notebook_dir + "/Backup", "mode": "ro"},
     notebook_mount_dir + "/shared": {"bind": notebook_dir + "/shared", "mode": "rw"},
+    # notebook_mount_dir
+    # + "/shared/backup": {"bind": notebook_dir + "/shared/backup", "mode": "ro"},
     notebook_mount_dir
     + "/{username}/": {"bind": notebook_dir + "/private", "mode": "rw"},
     # Mount point for collaboration jupyter lab
@@ -392,6 +388,6 @@ c.JupyterHub.services = [
     {
         "url": "http://collab_proxy:8099",
         "name": "Collaborative-Jupyter",
-        "api_token": "API_TOKEN_EXAMPLE",
+        "api_token": os.environ.get("JUPYTERHUB_API_TOKEN", "API_TOKEN_EXAMPLE"),
     },
 ]

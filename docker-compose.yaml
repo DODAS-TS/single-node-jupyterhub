@@ -27,6 +27,10 @@ services:
       - /usr/local/share/dodasts/jupyterhub/cookies:/srv/jupyterhub/cookies
       - /usr/local/share/dodasts/jupyterhub/db:/srv/jupyterhub/db
     environment:
+      - JUPYTER_IMAGE_LIST=dodasts/mlinfn-base:v6
+      - JUPYTER_RAM_LIST=1g,2g,4g
+      - JUPYTER_PROXY_TOKEN=TOKEN_EXAMPLE
+      - JUPYTERHUB_API_TOKEN=TOKEN_EXAMPLE
       - OAUTH_ENDPOINT=https://iam-demo.cloud.cnaf.infn.it
       - OAUTH_CALLBACK_URL=https://{{HOST_IP}}:8888/hub/oauth_callback
       - OAUTH_GROUPS=group1
@@ -57,7 +61,7 @@ services:
   collab_proxy:
     depends_on:
       - jupyterlab_collab
-    build: collab_proxy
+    image: dodasts/base-jlabcollaborative-proxy:latest
     environment:
       - JUPYTERHUB_BASE_URL=http://jupyterhub:8088
       - JUPYTERHUB_API_URL=http://jupyterhub:8088/hub/api
@@ -70,14 +74,15 @@ services:
       - 8099:8099
 
   jupyterlab_collab:
-    build: jupyterlab_collab
+    image: dodasts/base-jlabcollaborative:latest
     volumes:
       # You can create a certificate example with dodas-x509
-      - /usr/local/share/certs/jupyter:/usr/local/share/certs/jupyter
+      - /usr/local/share/dodasts/certs/jupyter:/usr/local/share/dodasts/certs/jupyter
       - /usr/local/share/collabspace/:/usr/share/workspace
     environment:
       # You can create a token with `openssl rand -hex 32`
       - JUPYTER_TOKEN=TOKEN_EXAMPLE
+      - JUPYTERHUB_API_TOKEN=TOKEN_EXAMPLE
     ports:
       - 8889:8888
 
