@@ -17,7 +17,7 @@ services:
     depends_on:
       - http_proxy
       - collab_proxy
-    build: .
+    image: dodasts/snj-base-jhub:latest
     command:
       - /usr/bin/python3
       - /usr/local/bin/jupyterhub

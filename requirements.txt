@@ -1,4 +1,0 @@
-dockerspawner
-jupyterhub-dummyauthenticator
-oauthenticator==0.13.0
-jupyterhub-idle-culler
