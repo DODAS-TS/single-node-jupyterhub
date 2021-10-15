@@ -78,7 +78,7 @@ services:
     volumes:
       # You can create a certificate example with dodas-x509
       - /usr/local/share/dodasts/certs/jupyter:/usr/local/share/dodasts/certs/jupyter
-      - /usr/local/share/collabspace/:/usr/share/workspace
+      - /usr/local/share/collabspace/:/usr/share/workspace/collabspace
     environment:
       # You can create a token with `openssl rand -hex 32`
       - JUPYTER_TOKEN=TOKEN_EXAMPLE
